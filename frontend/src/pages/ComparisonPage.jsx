@@ -25,6 +25,8 @@ const ChartSection = styled.section`
   border-radius: 10px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
   margin-bottom: 2rem;
+  min-height: 500px;
+  position: relative;
 `;
 
 const SectionTitle = styled.h2`
@@ -89,11 +91,74 @@ const HeaderActions = styled.div`
   margin-bottom: 2rem;
 `;
 
+const TimeRangeSelector = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  position: absolute;
+  top: calc(1rem + 5px);
+  right: 1rem;
+  z-index: 10;
+`;
+
+const TimeButton = styled.button`
+  padding: 0.4rem 0.8rem;
+  border: 1px solid #e1e8ed;
+  background: white;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s;
+  color: #000000;
+  font-size: 0.9rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  
+  &:hover {
+    background-color: #f8f9fa;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  
+  &.active {
+    background-color: #667eea;
+    color: white;
+    border-color: #667eea;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  }
+`;
+
 const ComparisonPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [selectedCountries, setSelectedCountries] = useState([]);
+  const [timeRange, setTimeRange] = useState('1w');
+  const [selectedChartCountry, setSelectedChartCountry] = useState(null);
   const { fetchAllData, loading } = useCurrencyData();
+
+  const timeRanges = [
+    { value: '1w', label: '1주' },
+    { value: '1m', label: '1개월' },
+    { value: '3m', label: '3개월' },
+    { value: '6m', label: '6개월' }
+  ];
+
+  // 국가 코드를 통화 코드로 변환하는 함수
+  const getCurrencyCode = (countryCode) => {
+    const countryToCurrency = {
+      'US': 'USD',
+      'JP': 'JPY', 
+      'GB': 'GBP',
+      'CN': 'CNY',
+      'EU': 'EUR',
+      'AU': 'AUD',
+      'CA': 'CAD',
+      'CH': 'CHF',
+      'KR': 'KRW'
+    };
+    return countryToCurrency[countryCode] || 'USD';
+  };
+
+  // 차트 클릭 핸들러
+  const handleChartClick = (countryCode) => {
+    setSelectedChartCountry(countryCode);
+  };
 
   useEffect(() => {
     const countriesParam = searchParams.get('countries');
@@ -138,14 +203,36 @@ const ComparisonPage = () => {
       </PageTitle>
       
       <ChartSection>
-        <SectionTitle>환율 차트</SectionTitle>
-        <ExchangeRateChart />
+        <SectionTitle>
+          {selectedChartCountry ? `${selectedChartCountry} 환율 차트` : '환율 차트'}
+        </SectionTitle>
+        
+        <TimeRangeSelector>
+          {timeRanges.map(range => (
+            <TimeButton
+              key={range.value}
+              className={timeRange === range.value ? 'active' : ''}
+              onClick={() => setTimeRange(range.value)}
+            >
+              {range.label}
+            </TimeButton>
+          ))}
+        </TimeRangeSelector>
+        
+        <ExchangeRateChart 
+          currencyCode={getCurrencyCode(selectedChartCountry || selectedCountries[0]) || 'USD'} 
+          timeRange={timeRange} 
+        />
       </ChartSection>
 
       {selectedCountries.length > 0 ? (
         <CountriesGrid>
           {selectedCountries.map(countryCode => (
-            <CountryCard key={countryCode} country={countryCode} />
+            <CountryCard 
+              key={countryCode} 
+              country={countryCode} 
+              onChartClick={handleChartClick}
+            />
           ))}
         </CountriesGrid>
       ) : (

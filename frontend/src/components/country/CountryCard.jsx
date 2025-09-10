@@ -42,6 +42,34 @@ const CountryCode = styled.p`
   font-size: 0.9rem;
 `;
 
+const ChartIcon = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  
+  &:hover {
+    background-color: #f8f9fa;
+    color: #2c3e50;
+    transform: scale(1.1);
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+  
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+`;
+
 const DataGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -96,7 +124,7 @@ const LastUpdated = styled.div`
   border-top: 1px solid #eee;
 `;
 
-const CountryCard = ({ country }) => {
+const CountryCard = ({ country, onChartClick }) => {
   const { exchangeRates, priceIndices, loading, error, fetchExchangeRates, fetchPriceIndex } = useCurrencyData();
   const [localData, setLocalData] = useState({
     exchangeRate: null,
@@ -149,6 +177,13 @@ const CountryCard = ({ country }) => {
   };
 
   const info = countryInfo[country] || { name: country, flag: '🌍', currency: country };
+
+  // 차트 아이콘 클릭 핸들러
+  const handleChartClick = () => {
+    if (onChartClick) {
+      onChartClick(country);
+    }
+  };
 
   // 실제 빅맥 가격 데이터 (2024년 최신 데이터)
   const bigMacPrices = {
@@ -255,6 +290,11 @@ const CountryCard = ({ country }) => {
           <CountryName>{info.name}</CountryName>
           <CountryCode>{info.currency}</CountryCode>
         </CountryInfo>
+        <ChartIcon onClick={handleChartClick} title="환율 차트 보기">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M3 13h2v8H3v-8zm4-6h2v14H7V7zm4-4h2v18h-2V3zm4 8h2v10h-2V11zm4-2h2v12h-2V9z"/>
+          </svg>
+        </ChartIcon>
       </CardHeader>
 
       <DataGrid>
